@@ -53,7 +53,7 @@ classdef visualize
             xlabel('Time (s)');
             ylabel('Energy (J)');
             title('Energy');
-            legend('Kinetische Energie','Potentielle Energie','Gesamtenergie')
+            legend('kinetic energy','potential energy','total energy')
             grid on;
         end
 
@@ -70,6 +70,7 @@ classdef visualize
             ylabel('\phi (rad)');
             title('2D Mathematical Pendulum');
             legend('analytical solution','numerical solution')
+            grid on
 
             subplot(2,1,2);
             title('2D Mathematical Pendulum');

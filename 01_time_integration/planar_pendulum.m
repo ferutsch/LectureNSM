@@ -3,11 +3,11 @@ clearvars
 close all
 
 % Parameters
-g = 9.81;               % gravity [m/s^2]
-L = 1.0;                % length of pendulum [m]
-delta_t = 0.05;         % time step [s]
-T = 10;                 % total time [s]
-N = round(T/delta_t);   % number of time steps
+g = 9.81;                   % gravity [m/s^2]
+L = 1.0;                    % length of pendulum [m]
+delta_t = 0.05;             % time step [s]
+T = 10;                     % total time [s]
+N = round(T/delta_t);       % number of time steps
 
 % Preallocate
 phi = zeros(1, N+1);
@@ -15,11 +15,11 @@ v = zeros(1, N+1);
 t = 0:delta_t:T;
 
 % Initial conditions 
-phi(1) = pi/4;          % [rad] e.g. pi/4 for 45 degrees
-v(1) = 0;               % [rad/s]
+phi(1) = pi/4;              % [rad] e.g. pi/4 for 45 degrees
+v(1) = 0;                   % [rad/s]
 
-method = 'implicit Euler';
-linearized = true;
+method = 'implicit Euler';  % define the method
+linearized = false;          % define usage of lin. or nonlin. pendulum eq.
 
 switch method
 case 'explicit Euler' %----------------------------------------------------
@@ -52,19 +52,19 @@ case 'implicit Euler' %----------------------------------------------------
             % Newton iteration
             for iter = 1:10
                 % Residuals
-                F1 = phi_guess - phi(n) - delta_t * v_guess;
-                F2 = v_guess - v(n) + delta_t * (g/L) * sin(phi_guess);
+                R1 = phi_guess - phi(n) - delta_t * v_guess;
+                R2 = v_guess - v(n) + delta_t * (g/L) * sin(phi_guess);
     
                 % Jacobian
                 J = [1,        -delta_t;
                      delta_t*(g/L)*cos(phi_guess), 1];
     
                 % Update
-                delta = -J \ [F1; F2];
-                phi_guess = phi_guess + delta(1);
-                v_guess = v_guess + delta(2);
+                h = -J \ [R1; R2];
+                phi_guess = phi_guess + h(1);
+                v_guess = v_guess + h(2);
     
-                if norm(delta) < 1e-10
+                if norm(h) < 1e-10
                     break;
                 end
             end
@@ -98,13 +98,13 @@ end
 visualize.angle(phi, v, t)
 
 % energy
-visualize.energy(phi, v, t, L, g)
+visualize.energy(phi, v, t, L, g) % only for nonlinear eq.
+
+% compare with analytical solution
+%visualize.analytical(phi,t,g,L) % only for linearized eq. and certain BCs
 
 % animate
 visualize.animate(phi, t, L, delta_t)
-
-% compare with analytical solution
-%visualize.analytical(phi,t,g,L)
 
 
 %#ok<*UNRCH> % suppress warning unreachable code lines
