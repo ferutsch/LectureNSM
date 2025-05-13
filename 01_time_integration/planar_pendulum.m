@@ -143,7 +143,7 @@ visualize.angle(phi, v, t)
 visualize.energy(phi, v, t, L, g) % only for nonlinear eq.
 
 % compare with analytical solution
-%visualize.analytical(phi,t,g,L) % only for linearized eq. and certain BCs
+visualize.analytical(phi,t,g,L) % only for linearized eq. and certain BCs
 
 % animate
 visualize.animate(phi, t, L, delta_t)
