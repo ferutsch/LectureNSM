@@ -22,7 +22,7 @@ t = 0:delta_t:T;
 phi(1) = pi/4;              % [rad] e.g. pi/4 for 45 degrees
 v(1) = 0;                   % [rad/s]
 
-method = 'symplectic Euler';  % define the method
+method = 'trapezoid rule';  % define the method
 linearized = false;          % define usage of lin. or nonlin. pendulum eq.
 
 switch method
@@ -143,10 +143,10 @@ visualize.angle(phi, v, t)
 visualize.energy(phi, v, t, L, g) % only for nonlinear eq.
 
 % compare with analytical solution
-visualize.analytical(phi,t,g,L) % only for linearized eq. and certain BCs
+%visualize.analytical(phi,t,g,L) % only for linearized eq. and certain BCs
 
 % animate
-visualize.animate(phi, t, L, delta_t)
+%visualize.animate(phi, t, L, delta_t)
 
 
 %#ok<*UNRCH> % suppress warning unreachable code lines
