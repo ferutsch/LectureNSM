@@ -1,71 +1,44 @@
 function [Q, M, w] = FDM_solve_forward(N,L,q,F,E,I)
 
 delta_x = L/(N-1);
-x_axis = 0:delta_x:L;
 
-% coeficient pattern for forward difference method
-forward_coefs = zeros(N-1,N);
+% coefficient matrix for BCs at i=N
+coef_mtrx_1 = sparse(N,N);
 for i=1:N-1
-    forward_coefs(i,i) = -1;
-    forward_coefs(i,i+1) = 1;
+    coef_mtrx_1(i,i) = -1;
+    coef_mtrx_1(i,i+1) = 1;
 end
+coef_mtrx_1(N,N) = 1; % BC: Q(x=L) and M(x=L)
 
-% coefficient pattern for second derivative
-second_derivative_coefs = zeros(N-2,N);
-for i = 1:N-2
-    second_derivative_coefs(i,i) = 1;
-    second_derivative_coefs(i,i+1) = -2;
-    second_derivative_coefs(i,i+2) = 1;
+%coefficient matrix for BCs at i=1
+coef_mtrx_2 = sparse(N,N);
+for i=2:N
+    coef_mtrx_2(i,i-1) = -1;
+    coef_mtrx_2(i,i) = 1;
 end
+coef_mtrx_2(1,1) = 1; % BC
 
-%% calculate shear force
 
-% vector
-Q_vector = zeros(N,1);
-Q_vector(1:N-1) = -q*delta_x;
+% shear force
+Q_vector = -q*delta_x*ones(N,1);
 Q_vector(N) = F; % BC: Q(x=L) = F
 
-% coefficient matrix
-Q_coefs = zeros(N,N);
-Q_coefs(1:N-1,1:N) = forward_coefs;
-Q_coefs(N,N) = 1; % BC: Q(x=L)
+Q = coef_mtrx_1\Q_vector;
 
-% solve
-Q = Q_coefs\Q_vector;
-
-
-%% calculate bending moment
-
-% vector
-M_vector = zeros(N,1);
-M_vector(1:N-1) = Q(i)*delta_x;
+% bending moment
+M_vector = Q*delta_x;
 M_vector(N) = 0; % BC: M(x=L) = 0
 
-% coefficient matrix
-M_coefs = zeros(N,N);
-M_coefs(1:N-1,1:N) = forward_coefs;
-M_coefs(N,N) = 1; % BC: M(x=L)
+M = coef_mtrx_1\M_vector;
 
-% solve
-M = M_coefs\M_vector;
+% incline
+dw_vector = (-M*delta_x)./(E*I);
+dw_vector(1) = 0;
 
-%% calculate beam deflection
-% vector
-w_vector = zeros(N,1);
-for i=3:N 
-    w_vector(i) = -M(i-1)/(E*I(i-1));
-end
-w_vector(1) = 0; % BC: w(x=0) = 0
-w_vector(2) = 0; % BC: w'(x=0) = 0
+dw = coef_mtrx_2\dw_vector;
 
-% coefficient matrix
-w_coefs = zeros(N,N);
-w_coefs(3:N,1:N) = second_derivative_coefs/(delta_x^2);
-w_coefs(1,1) = 1; % BC w(x=0)
-w_coefs(2,1:3) = [-3, 4, -1]/(2*delta_x); % BC: w'(x=0) -> 2nd order forward difference
+% displacement
+w_vector = dw*delta_x;
+w_vector(1) = 0;
 
-% solve
-w = w_coefs\w_vector;
-
-end
-
+w = coef_mtrx_2\w_vector;

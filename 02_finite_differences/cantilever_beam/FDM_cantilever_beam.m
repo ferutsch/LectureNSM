@@ -7,7 +7,7 @@
 clearvars;
 
 %% parameters
-N = 10;             % number of points
+N = 11;             % number of points
 L = 1;              % [m] length of cantilever
 q = 0;              % [N/m] line load
 F = 1;              % [N] load at tip of cantilever
@@ -17,7 +17,7 @@ I_const = 1;        % [m4] moment of inertia
 delta_x = L/(N-1);
 x_axis = 0:delta_x:L;
 
-I = I_const*ones(1,N);   
+I = I_const*ones(N,1);   
 
 
 %% solve

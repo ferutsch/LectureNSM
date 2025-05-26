@@ -17,6 +17,7 @@ function plot_result(x_axis,Q,M,w,w_analytical)
     plot(x_axis,w)
     hold on
     plot(x_axis,w_analytical(x_axis))
+    hold off
     set(gca, 'YDir','reverse')
     title('Durchbiegung')
     ylabel('w(x)')
