@@ -18,7 +18,7 @@ M_coefs(N-1,N-2:N) = [1, -4, 3]/(2*delta_x); % BC: Q(x=L) -> 2nd order backward 
 M = M_coefs\M_vector;
 
 
-w_vector = -M./(E*I);
+w_vector = -M./(E*I');
 w_vector(1) = 0; % BC: w(x=0) = 0
 w_vector(2) = 0; % BC: w'(x=0) = 0
 

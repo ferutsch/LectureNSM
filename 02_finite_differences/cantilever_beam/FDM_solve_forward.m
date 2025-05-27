@@ -32,7 +32,7 @@ M_vector(N) = 0; % BC: M(x=L) = 0
 M = coef_mtrx_1\M_vector;
 
 % incline
-dw_vector = (-M*delta_x)./(E*I);
+dw_vector = (-M*delta_x)./(E*I');
 dw_vector(1) = 0;
 
 dw = coef_mtrx_2\dw_vector;
