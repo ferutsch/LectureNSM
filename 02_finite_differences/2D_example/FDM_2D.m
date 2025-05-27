@@ -75,6 +75,11 @@ phi = reshape(phi_vec, [Nx, Ny]);
 
 %--- VISUALIZE ---
 
+% plot heat source
+surf(X, Y, f');
+xlabel('x'); ylabel('y'); zlabel('f(x,y)');
+title('Heat source');
+
 % surface plot
 figure;
 surf(X, Y, phi');
@@ -85,18 +90,10 @@ colorbar;
 
 % with grid
 figure;
-surf(X, Y, phi','EdgeColor','k','FaceColor','interp');
+surf(X, Y, phi','EdgeColor','k');
 view(2);
 xlabel('x [m]'); ylabel('y [m]');
 title('Temperature \phi(x,y) [K]');
+shading interp;
 colorbar;
 axis equal tight;
-
-% plot heat source
-%figure;
-%imagesc(f)
-%grid on
-%xlabel('x [m]'); ylabel('y [m]');
-%title('Heat source Q_0(x,y) [W/m^3]');
-%colorbar;
-%axis equal tight;
