@@ -1,3 +1,10 @@
+%% Code example 2: Finite Differences Method
+
+% Lecture 'Numerical Simulation Methods'
+% Felix Rutsch, May 2025
+
+% solve stationary advection-diffusion equation with FDM
+
 clearvars
 
 %--- PARAMETERS (SI UNITS) ---
