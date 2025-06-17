@@ -15,16 +15,16 @@ clearvars
 %--- PARAMETERS (SI UNITS) ---
 Lx = 1.0;              % [m]
 Ly = 1.0;              % [m]
-Nx = 50; Ny = 50;      % grid points
+Nx = 100; Ny = 100;      % grid points
 hx = Lx/Nx;            % [m]
 hy = Ly/Ny;            % [m]
 
-rho = 1.0e3;           % [kg/m^3], mass density, e.g. 1.0e3 for water
-cp  = 4.18e3;          % [J/(kg K)], heat capacity, e.g. 4.18e3
-k   = 0.6;               % [W/(m K)], thermal conductivity, e.g. 0.6 
+rho = 10;           % [kg/m^3], mass density, e.g. 1.0e3 for water
+cp  = 10;          % [J/(kg K)], heat capacity, e.g. 4.18e3
+k   = 1;               % [W/(m K)], thermal conductivity, e.g. 0.6 
 %alpha = k/(rho*cp);   % [m^2/s], thermal diffusivity
 
-v1 = 0.0; v2 = -0.1;   % [m/s]
+vx = 0.1; vy = 0.1;   % [m/s]
 
 method = 'UDS'; % for the convective term: UDS or CDS
 
@@ -32,7 +32,7 @@ method = 'UDS'; % for the convective term: UDS or CDS
 x = hx/2:hx:Lx-hx/2;  % cell‐center x
 y = hy/2:hy:Lx-hy/2;  % cell‐center y
 
-Q0 = 100000;
+Q0 = 1000;
 src_size = 0.2; % [m] size of the heat source
 ncell = src_size/(2*hx);
 cx = ceil(Nx/2);
@@ -53,108 +53,157 @@ idx = @(i,j) (j-1)*Nx + i;
 switch method
     case 'CDS' % central differencing scheme
     % CDS for both the advective and diffusive terms   
-    aW = k/hx^2 + rho*cp * v1 / (2*hx);
-    aE = k/hx^2 - rho*cp * v1 / (2*hx);
-    aS = k/hy^2 + rho*cp * v2 / (2*hy);
-    aN = k/hy^2 - rho*cp * v2 / (2*hy);
-    aP = aW + aE + aS + aN;
+    dfs = k/hx^2;
+    adv_x = rho*cp * vx / (2*hx);
+    adv_y = rho*cp * vy / (2*hy);
+
+    aW = dfs + adv_x;
+    aE = dfs - adv_x;
+    aS = dfs + adv_y;
+    aN = dfs - adv_y;
+
+    % for Dirichlet BCs
+    aW2 = 2*dfs + adv_x;
+    aE2 = 2*dfs - adv_x;
+    aS2 = 2*dfs + adv_y;
+    aN2 = 2*dfs - adv_y;
 
     case 'UDS' % upwind differencing scheme
     % CDS for the diffusive term
     % UDS for the advective term (maximum operator)
-    aW = k/hx^2 + max(0,rho*cp * v1 / hx);
-    aE = k/hx^2 + max(0,-rho*cp * v1 / hx);
-    aS = k/hy^2 + max(0,rho*cp * v2 / hy);
-    aN = k/hy^2 + max(0,-rho*cp * v2 / hy);
-    aP = aW + aE + aS + aN;
+    dfs = k/hx^2;
+    adv_x = rho*cp * vx / hx;
+    adv_y = rho*cp * vy / hy;
+
+    aW = dfs + max(0,adv_x);
+    aE = dfs + max(0,-adv_x);
+    aS = dfs + max(0,adv_y);
+    aN = dfs + max(0,-adv_y);
+
+    % for Dirichlet BCs
+    aW2 = 2*dfs + max(0,adv_x);
+    aE2 = 2*dfs + max(0,-adv_x);
+    aS2 = 2*dfs + max(0,adv_y);
+    aN2 = 2*dfs + max(0,-adv_y);
+   
 end
 
-for j = 2:Ny-1
-  for i = 2:Nx-1
+for j = 1:Ny
+  for i = 1:Nx
     p = idx(i,j);
     
-    A(p, idx(i-1,j  )) = -aW;
-    A(p, idx(i+1,j  )) = -aE;
-    A(p, idx(i  ,j-1)) = -aS;
-    A(p, idx(i  ,j+1)) = -aN;
-    A(p, idx(i,  j  )) = aP;
+    if i > 1 
+        A(p, idx(i-1, j)) = -aW;
+        A(p, p) = A(p, p) + aW;
+    end
+    if i < Nx
+        A(p, idx(i+1, j)) = -aE;
+        A(p, p) = A(p, p) + aE;
+    end
+    if j > 1 
+        A(p, idx(i, j-1)) = -aS;
+        A(p, p) = A(p, p) + aS;
+    end
+    if j < Ny
+        A(p, idx(i, j+1)) = -aN;
+        A(p, p) = A(p, p) + aN;
+    end
     b(p) = Fv(p);
+
   end
 end
 
 
 %--- BOUNDARY CONDITIONS ---
-T0 = 300; % Temperature for Dirichlet boundaries
+% D for Diriclet, N for Neumann
 
-% south boundary (j=1)
-BCsouth = 'Neumann';
-qS = 0; % flux
+% west
+BC_W = 'D';
+phi_W = 300;
+fW = 0;
 
-switch BCsouth
+% east
+BC_E = 'U';
+phi_E = 300;
+fE = 0;
 
-    case 'Dirichlet'
-    for i = 1:Nx
-        p = idx(i,1);
-        A(p,p) = 1; b(p) = T0;
-    end
+% south
+BC_S = 'D';
+phi_S = 300;
+fS = 0; 
 
-    case 'Neumann'
-    j = 1;
-    for i = 1:Nx
-        p = idx(i,j);
-        % accumulate West, East, North neighbours as usual
-        A(p, p)         = aP + aS;           % add south diffusive coeff
-        if i>1,   A(p, idx(i-1,j  )) = -aW;   end
-        if i<Nx,  A(p, idx(i+1,j  )) = -aE;   end
-        A(p, idx(i  ,j+1)) = -aN;
-        % add Neumann source: +2*k/hy * qS
-        b(p) = Fv(p) + 2*k/hy * qS;
-    end
+% north
+BC_N = 'U';
+phi_N = 300;
+fN = 0; 
+
+
+% west boundary (i=1)
+switch BC_W
+case 'D'
+for j = 1:Ny
+    p = idx(1, j);
+    A(p, p) = A(p, p) + aW2;           
+    b(p) = b(p) + aW2*phi_W;
+end
+case 'N'
+for j = 1:Ny
+    p = idx(1, j);           
+    b(p) = b(p) + fW/hx;
+end
 end
 
-% north boundary (j = Ny)
-BCnorth = 'Dirichlet';
-qN = 0; % flux
-
-switch BCnorth
-
-    case 'Dirichlet'
-        for i = 1:Nx
-            p = idx(i,Ny);
-            A(p,p) = 1; b(p) = T0;
-        end
-
-    case'Neumann'
-        j = Ny;
-        for i = 1:Nx
-            p = idx(i,j);
-            A(p, p)         = aP + aN;           % add north diffusive coeff
-            if i>1,   A(p, idx(i-1,j  )) = -aW;   end
-            if i<Nx,  A(p, idx(i+1,j  )) = -aE;   end
-            A(p, idx(i  ,j-1)) = -aS;
-            % add Neumann source: -2*k/hy * qN
-            b(p) = Fv(p) - 2*k/hy * qN;
-        end
+% east boundary (i=Nx)
+switch BC_E
+case 'D'
+for j = 1:Ny
+    p = idx(Nx, j);
+    A(p, p) = A(p, p) + aE2;           
+    b(p) = b(p) + aE2*phi_E;
+end
+case 'N'
+for j = 1:Ny
+    p = idx(1, j);           
+    b(p) = b(p) + fE/hx;
+end
 end
 
-
-% west boundary
-for j = 2:Ny-1
-    p = idx(1,j);
-    A(p,p) = 1; b(p) = T0;
+% south boundary
+switch BC_S
+case 'D'
+for i = 2:Nx-1
+    p = idx(i, 1); % j=1 for south boundary
+    A(p, p) = A(p, p) + aS2;          
+    b(p) = b(p) + aS2*phi_S;
+end
+case 'N'
+for j = 1:Ny
+    p = idx(1, j);           
+    b(p) = b(p) + fS/hx;
+end
 end
 
-% east boundary
-for j = 2:Ny-1
-    p = idx(Nx,j);
-    A(p,p) = 1; b(p) = T0;
+% north boundary
+switch BC_N
+case 'D'
+for i = 2:Nx-1
+    p = idx(i, Ny); % j=Ny for north boundary
+    A(p, p) = A(p, p) + aN2;           
+    b(p) = b(p) + aN2*phi_N;
 end
+case 'N'
+for j = 1:Ny
+    p = idx(1, j);           
+    b(p) = b(p) + fN/hx;
+end
+end
+
 
 %--- SOLVE & RESHAPE ---
 phi_vec = A \ b;
-phi = reshape(phi_vec, [Nx, Ny]); 
+phi = reshape(phi_vec, [Ny, Nx])'; 
 
 %--- VISUALIZE ---
 visualize.heat_source(x,y,hx,hy,f)
-visualize.temperature_interp(x,y,hx,hy,phi')
-visualize.temperature(x,y,phi')
+visualize.temperature_interp(x,y,hx,hy,phi)
+visualize.temperature(x,y,phi)
