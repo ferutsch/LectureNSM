@@ -15,16 +15,16 @@ clearvars
 %--- PARAMETERS (SI UNITS) ---
 Lx = 1.0;              % [m]
 Ly = 1.0;              % [m]
-Nx = 100; Ny = 100;      % grid points
+Nx = 100; Ny = 100;    % grid points
 hx = Lx/Nx;            % [m]
 hy = Ly/Ny;            % [m]
 
-rho = 10;           % [kg/m^3], mass density, e.g. 1.0e3 for water
-cp  = 10;          % [J/(kg K)], heat capacity, e.g. 4.18e3
+rho = 10;              % [kg/m^3], mass density, e.g. 1.0e3 for water
+cp  = 10;              % [J/(kg K)], heat capacity, e.g. 4.18e3
 k   = 1;               % [W/(m K)], thermal conductivity, e.g. 0.6 
 %alpha = k/(rho*cp);   % [m^2/s], thermal diffusivity
 
-vx = 0.1; vy = 0.1;   % [m/s]
+vx = 0.1; vy = 0.1;    % [m/s]
 
 method = 'UDS'; % for the convective term: UDS or CDS
 
@@ -53,7 +53,8 @@ idx = @(i,j) (j-1)*Nx + i;
 switch method
     case 'CDS' % central differencing scheme
     % CDS for both the advective and diffusive terms   
-    dfs = k/hx^2;
+    dfs_x = k/hx^2;
+    dfs_y = k/hy^2;
     adv_x = rho*cp * vx / (2*hx);
     adv_y = rho*cp * vy / (2*hy);
 
@@ -71,20 +72,21 @@ switch method
     case 'UDS' % upwind differencing scheme
     % CDS for the diffusive term
     % UDS for the advective term (maximum operator)
-    dfs = k/hx^2;
+    dfs_x = k/hx^2;
+    dfs_y = k/hy^2;
     adv_x = rho*cp * vx / hx;
     adv_y = rho*cp * vy / hy;
 
-    aW = dfs + max(0,adv_x);
-    aE = dfs + max(0,-adv_x);
-    aS = dfs + max(0,adv_y);
-    aN = dfs + max(0,-adv_y);
+    aW = dfs_x + max(0,adv_x);
+    aE = dfs_x + max(0,-adv_x);
+    aS = dfs_y + max(0,adv_y);
+    aN = dfs_y + max(0,-adv_y);
 
     % for Dirichlet BCs
-    aW2 = 2*dfs + max(0,adv_x);
-    aE2 = 2*dfs + max(0,-adv_x);
-    aS2 = 2*dfs + max(0,adv_y);
-    aN2 = 2*dfs + max(0,-adv_y);
+    aW2 = 2*dfs_x + max(0,adv_x);
+    aE2 = 2*dfs_x + max(0,-adv_x);
+    aS2 = 2*dfs_y + max(0,adv_y);
+    aN2 = 2*dfs_y + max(0,-adv_y);
    
 end
 
@@ -116,6 +118,7 @@ end
 
 %--- BOUNDARY CONDITIONS ---
 % D for Diriclet, N for Neumann
+% (use U or any other letter for undefined)
 
 % west
 BC_W = 'D';
@@ -123,7 +126,7 @@ phi_W = 300;
 fW = 0;
 
 % east
-BC_E = 'U';
+BC_E = 'N';
 phi_E = 300;
 fE = 0;
 
@@ -133,7 +136,7 @@ phi_S = 300;
 fS = 0; 
 
 % north
-BC_N = 'U';
+BC_N = 'N';
 phi_N = 300;
 fN = 0; 
 
@@ -168,11 +171,11 @@ for j = 1:Ny
 end
 end
 
-% south boundary
+% south boundary (j=1)
 switch BC_S
 case 'D'
 for i = 2:Nx-1
-    p = idx(i, 1); % j=1 for south boundary
+    p = idx(i, 1);
     A(p, p) = A(p, p) + aS2;          
     b(p) = b(p) + aS2*phi_S;
 end
@@ -183,11 +186,11 @@ for j = 1:Ny
 end
 end
 
-% north boundary
+% north boundary (j=Ny)
 switch BC_N
 case 'D'
 for i = 2:Nx-1
-    p = idx(i, Ny); % j=Ny for north boundary
+    p = idx(i, Ny);
     A(p, p) = A(p, p) + aN2;           
     b(p) = b(p) + aN2*phi_N;
 end
