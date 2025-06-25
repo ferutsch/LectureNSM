@@ -11,17 +11,18 @@
 % o ---> x
 
 clearvars
+close all
 
 %--- PARAMETERS (SI UNITS) ---
 Lx = 1.0;              % [m]
 Ly = 1.0;              % [m]
-Nx = 100; Ny = 100;    % grid points
+Nx = 50; Ny = 50;    % grid points
 hx = Lx/Nx;            % [m]
 hy = Ly/Ny;            % [m]
 
 rho = 10;              % [kg/m^3], mass density, e.g. 1.0e3 for water
 cp  = 10;              % [J/(kg K)], heat capacity, e.g. 4.18e3
-k   = 1;               % [W/(m K)], thermal conductivity, e.g. 0.6 
+k   = 0;               % [W/(m K)], thermal conductivity, e.g. 0.6 
 %alpha = k/(rho*cp);   % [m^2/s], thermal diffusivity
 
 vx = 0.1; vy = 0.1;    % [m/s]
@@ -58,16 +59,16 @@ switch method
     adv_x = rho*cp * vx / (2*hx);
     adv_y = rho*cp * vy / (2*hy);
 
-    aW = dfs + adv_x;
-    aE = dfs - adv_x;
-    aS = dfs + adv_y;
-    aN = dfs - adv_y;
+    aW = dfs_x + adv_x;
+    aE = dfs_x - adv_x;
+    aS = dfs_y + adv_y;
+    aN = dfs_y - adv_y;
 
     % for Dirichlet BCs
-    aW2 = 2*dfs + adv_x;
-    aE2 = 2*dfs - adv_x;
-    aS2 = 2*dfs + adv_y;
-    aN2 = 2*dfs - adv_y;
+    aW2 = 2*dfs_x + adv_x;
+    aE2 = 2*dfs_x - adv_x;
+    aS2 = 2*dfs_y + adv_y;
+    aN2 = 2*dfs_y - adv_y;
 
     case 'UDS' % upwind differencing scheme
     % CDS for the diffusive term
@@ -121,22 +122,22 @@ end
 % (use U or any other letter for undefined)
 
 % west
-BC_W = 'D';
+BC_W = 'N';
 phi_W = 300;
 fW = 0;
 
 % east
-BC_E = 'N';
+BC_E = 'D';
 phi_E = 300;
 fE = 0;
 
 % south
-BC_S = 'D';
+BC_S = 'N';
 phi_S = 300;
 fS = 0; 
 
 % north
-BC_N = 'N';
+BC_N = 'D';
 phi_N = 300;
 fN = 0; 
 
