@@ -22,7 +22,7 @@ hy = Ly/Ny;            % [m]
 
 rho = 10;              % [kg/m^3], mass density, e.g. 1.0e3 for water
 cp  = 10;              % [J/(kg K)], heat capacity, e.g. 4.18e3
-k   = 0;               % [W/(m K)], thermal conductivity, e.g. 0.6 
+k   = 1;               % [W/(m K)], thermal conductivity, e.g. 0.6 
 %alpha = k/(rho*cp);   % [m^2/s], thermal diffusivity
 
 vx = 0.1; vy = 0.1;    % [m/s]
@@ -122,7 +122,7 @@ end
 % (use U or any other letter for undefined)
 
 % west
-BC_W = 'N';
+BC_W = 'D';
 phi_W = 300;
 fW = 0;
 
@@ -132,7 +132,7 @@ phi_E = 300;
 fE = 0;
 
 % south
-BC_S = 'N';
+BC_S = 'D';
 phi_S = 300;
 fS = 0; 
 
