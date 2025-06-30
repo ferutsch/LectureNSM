@@ -11,11 +11,12 @@
 % o ---> x
 
 clearvars
+close all
 
 %--- PARAMETERS (SI UNITS) ---
 Lx = 1.0;              % [m]
 Ly = 1.0;              % [m]
-Nx = 100; Ny = 100;    % grid points
+Nx = 50; Ny = 50;    % grid points
 hx = Lx/Nx;            % [m]
 hy = Ly/Ny;            % [m]
 
@@ -58,16 +59,16 @@ switch method
     adv_x = rho*cp * vx / (2*hx);
     adv_y = rho*cp * vy / (2*hy);
 
-    aW = dfs + adv_x;
-    aE = dfs - adv_x;
-    aS = dfs + adv_y;
-    aN = dfs - adv_y;
+    aW = dfs_x + adv_x;
+    aE = dfs_x - adv_x;
+    aS = dfs_y + adv_y;
+    aN = dfs_y - adv_y;
 
     % for Dirichlet BCs
-    aW2 = 2*dfs + adv_x;
-    aE2 = 2*dfs - adv_x;
-    aS2 = 2*dfs + adv_y;
-    aN2 = 2*dfs - adv_y;
+    aW2 = 2*dfs_x + adv_x;
+    aE2 = 2*dfs_x - adv_x;
+    aS2 = 2*dfs_y + adv_y;
+    aN2 = 2*dfs_y - adv_y;
 
     case 'UDS' % upwind differencing scheme
     % CDS for the diffusive term
