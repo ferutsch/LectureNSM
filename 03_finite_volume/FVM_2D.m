@@ -19,8 +19,8 @@ Nx = 100; Ny = 100;    % grid points
 hx = Lx/Nx;            % [m]
 hy = Ly/Ny;            % [m]
 
-rho = 10;              % [kg/m^3], mass density, e.g. 1.0e3 for water
-cp  = 10;              % [J/(kg K)], heat capacity, e.g. 4.18e3
+rho = 1000;              % [kg/m^3], mass density, e.g. 1.0e3 for water
+cp  = 1000;              % [J/(kg K)], heat capacity, e.g. 4.18e3
 k   = 1;               % [W/(m K)], thermal conductivity, e.g. 0.6 
 %alpha = k/(rho*cp);   % [m^2/s], thermal diffusivity
 
@@ -126,7 +126,7 @@ phi_W = 300;
 fW = 0;
 
 % east
-BC_E = 'N';
+BC_E = 'D';
 phi_E = 300;
 fE = 0;
 
@@ -136,7 +136,7 @@ phi_S = 300;
 fS = 0; 
 
 % north
-BC_N = 'N';
+BC_N = 'D';
 phi_N = 300;
 fN = 0; 
 
