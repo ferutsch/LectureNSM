@@ -16,31 +16,22 @@ close all
 %--- PARAMETERS (SI UNITS) ---
 Lx = 1.0;              % [m]
 Ly = 1.0;              % [m]
-nx = 10;                % elements in x direction
-ny = 10;                % elements in y direction
+nx = 50;               % elements in x direction
+ny = 50;               % elements in y direction
 
 k   = 1;               % [W/(m K)], thermal conductivity 
 %alpha = k/(rho*cp);   % [m^2/s], thermal diffusivity
 
-% adapt heat source
+T0 = 300;              % [K], Temperature at the Dirichlet boundaries
 
-%Q0 = 1000;
-%src_size = 0.2; % [m] size of the heat source
-%ncell = src_size/(2*hx);
-%cx = ceil(Nx/2);
-%cy = ceil(Ny/2);
-
-%f = zeros(Nx,Ny);
-%f( cx-ncell+1:cx+ncell, cy-ncell+1:cy+ncell ) = Q0;
-
-%--- FLATTEN SOURCE ---
-%Fv = reshape(f, Nx*Ny, 1);
-%[nodes, edof] = mesh(Lx, Ly, nx, ny); 
-
+Q0 = 1e4;
 
 % --- GENERATE FE MESH ---
 [nodes, edof] = mesh_rect_Q4(Lx, Ly, nx, ny); % edof = "element degrees of freedom"
-% move a single node by changing nodes vector on that position?
+
+% elements for heat source
+a = ny*nx/2 - ny/2;
+Q0_elems = [a, a+1, a+ny, a+ny+1];
 
 %--- ASSEMBLY ---
 nnodes = (nx+1)*(ny+1);         % number of nodes
@@ -52,8 +43,8 @@ F = zeros(nnodes, 1);           % initialize load vector
 % assembly loop
 for e = 1:nelem
 
-    if e==45
-        Fe = [1 1 1 1] * 12;
+    if ismember(e, Q0_elems)
+        Fe = [1 1 1 1]*Q0*(Lx/nx)*(Ly/ny)/4;
     else
         Fe = [0 0 0 0];
     end
@@ -76,32 +67,30 @@ for n=1:nnodes
 end
 freeNodes = setdiff(1:nnodes, boundaryNodes);
 
+phi = zeros(nnodes,1);
+phi(boundaryNodes) = T0; % Dirichlet BC
+
+% Modify load vector to account for Dirichlet BC
+F = F - K * phi;
 
 %--- SOLVE ---
-u = zeros(nnodes,1);
-u(freeNodes) = K(freeNodes, freeNodes) \ F(freeNodes);
-
+phi(freeNodes) = K(freeNodes, freeNodes) \ F(freeNodes);
 
 %--- VISUALIZE ---
-u_matrix = reshape(u,[ny+1,nx+1]);
-x = -0.5:0.1:0.5;
-y = -0.5:0.1:0.5;
-imagesc(x,y,u_matrix);
+visualize_FEM(nodes', edof, phi)
 
-%visualize.heat_source(x,y,hx,hy,f)
-%visualize.temperature_interp(x,y,hx,hy,phi)
-%visualize.temperature(x,y,phi)
+%u_matrix = reshape(u,[ny+1,nx+1]);
 
 
 function [Ke, be] = elem_heat_Q4(Fe,kappa)
 
 Xe = [0 0 1 1;
-      0 1 1 0]; % node coordinates
+      0 1 1 0];
 
 qp = [-1  1 -1  1;
       -1 -1  1  1] / sqrt(3); % gauss points
 
-qw = [ 1  1  1  1];
+qw = [ 1  1  1  1]; % weigths of the gauss points
 
 % Initalization
 Ne = 4;                 % Size of Ke, be
@@ -131,8 +120,8 @@ for k = 1:qn
     dNdX = dNdXi * Jinv;     
 
     % Integrand evaluation for element stiffness matrix
-    Kek = dNdX * kappa * dNdX' * detJ;
-    Ke = Ke + qw(k) * Kek;
+    Kek = dNdX * kappa * dNdX' * detJ; % corresponds to weak form
+    Ke = Ke + qw(k) * Kek; % multiply with weight of gauss point
 
     
     % element load vector
