@@ -24,7 +24,7 @@ k   = 1;               % [W/(m K)], thermal conductivity
 
 T0 = 300;              % [K], Temperature at the Dirichlet boundaries
 
-Q0 = 1e4;
+Q0 = 1e4;               % [W/m^3] heat source
 
 % --- GENERATE FE MESH ---
 [nodes, edof] = mesh_rect_Q4(Lx, Ly, nx, ny); % edof = "element degrees of freedom"
